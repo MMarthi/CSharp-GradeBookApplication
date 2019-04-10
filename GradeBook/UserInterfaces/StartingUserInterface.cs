@@ -40,14 +40,15 @@ namespace GradeBook.UserInterfaces
                 return;
             }
             var name = parts[1];
+            string type = parts[2].ToLower();
             BaseGradeBook gradeBook;
-            if (parts[2].ToLower() =="standard")
+            if (type =="standard")
             gradeBook = new StandardGradeBook(name);
-            else if (parts[2].ToLower() == "ranked")
+            else if (type == "ranked")
                 gradeBook = new RankedGradeBook(name);
             else 
             {
-                Console.WriteLine(parts[2].ToLower() + " is not a supported type of gradebook, please try again");
+                Console.WriteLine(type + " is not a supported type of gradebook, please try again");
                 return;
             }
 
