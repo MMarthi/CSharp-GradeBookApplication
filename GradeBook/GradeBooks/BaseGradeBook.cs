@@ -1,11 +1,10 @@
-﻿using System;
-using System.Linq;
-
-using GradeBook.Enums;
-using System.Collections.Generic;
-using System.IO;
+﻿using GradeBook.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace GradeBook.GradeBooks
 {
@@ -15,24 +14,32 @@ namespace GradeBook.GradeBooks
         public List<Student> Students { get; set; }
 
         public GradeBookType Type { get; set; }
+        public bool IsWeighted { get; set; }
 
-        public BaseGradeBook(string name)
+        public BaseGradeBook(string name, bool isWeighted)
         {
             Name = name;
             Students = new List<Student>();
+            IsWeighted = isWeighted;
         }
 
         public void AddStudent(Student student)
         {
             if (string.IsNullOrEmpty(student.Name))
+            {
                 throw new ArgumentException("A Name is required to add a student to a gradebook.");
+            }
+
             Students.Add(student);
         }
 
         public void RemoveStudent(string name)
         {
             if (string.IsNullOrEmpty(name))
+            {
                 throw new ArgumentException("A Name is required to remove a student from a gradebook.");
+            }
+
             var student = Students.FirstOrDefault(e => e.Name == name);
             if (student == null)
             {
@@ -45,7 +52,10 @@ namespace GradeBook.GradeBooks
         public void AddGrade(string name, double score)
         {
             if (string.IsNullOrEmpty(name))
+            {
                 throw new ArgumentException("A Name is required to add a grade to a student.");
+            }
+
             var student = Students.FirstOrDefault(e => e.Name == name);
             if (student == null)
             {
@@ -58,7 +68,10 @@ namespace GradeBook.GradeBooks
         public void RemoveGrade(string name, double score)
         {
             if (string.IsNullOrEmpty(name))
+            {
                 throw new ArgumentException("A Name is required to remove a grade from a student.");
+            }
+
             var student = Students.FirstOrDefault(e => e.Name == name);
             if (student == null)
             {
@@ -108,18 +121,40 @@ namespace GradeBook.GradeBooks
 
         public virtual double GetGPA(char letterGrade, StudentType studentType)
         {
-            switch (letterGrade)
+            if ((IsWeighted == true) && (studentType == StudentType.Honors || studentType == StudentType.DualEnrolled))
             {
-                case 'A':
-                    return 4;
-                case 'B':
-                    return 3;
-                case 'C':
-                    return 2;
-                case 'D':
-                    return 1;
-                case 'F':
-                    return 0;
+                switch (letterGrade)
+                {
+                    case 'A':
+                        return 5;
+                    case 'B':
+                        return 4;
+                    case 'C':
+                        return 3;
+                    case 'D':
+                        return 2;
+                    case 'F':
+                        return 1;
+                }
+                
+            }
+            else if ((IsWeighted == false) && (studentType == StudentType.Honors || studentType == StudentType.DualEnrolled))
+            {
+                switch (letterGrade)
+                {
+                    case 'A':
+                        return 4;
+                    case 'B':
+                        return 3;
+                    case 'C':
+                        return 2;
+                    case 'D':
+                        return 1;
+                    case 'F':
+                        return 0;
+                }
+               
+
             }
             return 0;
         }
@@ -176,19 +211,39 @@ namespace GradeBook.GradeBooks
             //#todo refactor into it's own method with calculations performed here
             Console.WriteLine("Average Grade of all students is " + (allStudentsPoints / Students.Count));
             if (campusPoints != 0)
+            {
                 Console.WriteLine("Average for only local students is " + (campusPoints / Students.Where(e => e.Enrollment == EnrollmentType.Campus).Count()));
+            }
+
             if (statePoints != 0)
+            {
                 Console.WriteLine("Average for only state students (excluding local) is " + (statePoints / Students.Where(e => e.Enrollment == EnrollmentType.State).Count()));
+            }
+
             if (nationalPoints != 0)
+            {
                 Console.WriteLine("Average for only national students (excluding state and local) is " + (nationalPoints / Students.Where(e => e.Enrollment == EnrollmentType.National).Count()));
+            }
+
             if (internationalPoints != 0)
+            {
                 Console.WriteLine("Average for only international students is " + (internationalPoints / Students.Where(e => e.Enrollment == EnrollmentType.International).Count()));
+            }
+
             if (standardPoints != 0)
+            {
                 Console.WriteLine("Average for students excluding honors and duel enrollment is " + (standardPoints / Students.Where(e => e.Type == StudentType.Standard).Count()));
+            }
+
             if (honorPoints != 0)
+            {
                 Console.WriteLine("Average for only honors students is " + (honorPoints / Students.Where(e => e.Type == StudentType.Honors).Count()));
+            }
+
             if (dualEnrolledPoints != 0)
+            {
                 Console.WriteLine("Average for only duel enrolled students is " + (dualEnrolledPoints / Students.Where(e => e.Type == StudentType.DualEnrolled).Count()));
+            }
         }
 
         public virtual void CalculateStudentStatistics(string name)
@@ -209,15 +264,25 @@ namespace GradeBook.GradeBooks
         public virtual char GetLetterGrade(double averageGrade)
         {
             if (averageGrade >= 90)
+            {
                 return 'A';
+            }
             else if (averageGrade >= 80)
+            {
                 return 'B';
+            }
             else if (averageGrade >= 70)
+            {
                 return 'C';
+            }
             else if (averageGrade >= 60)
+            {
                 return 'D';
+            }
             else
+            {
                 return 'F';
+            }
         }
 
         /// <summary>
@@ -243,13 +308,19 @@ namespace GradeBook.GradeBooks
                  from type in assembly.GetTypes()
                  where type.FullName == "GradeBook.GradeBooks.StandardGradeBook"
                  select type).FirstOrDefault() == null)
+            {
                 gradeBookType = "Base";
+            }
             else
             {
                 if (string.IsNullOrEmpty(gradeBookType))
+                {
                     gradeBookType = "Standard";
+                }
                 else
+                {
                     gradeBookType = Enum.GetName(gradebookEnum, int.Parse(gradeBookType));
+                }
             }
 
             // Get GradeBook from the GradeBook.GradeBooks namespace
@@ -261,11 +332,13 @@ namespace GradeBook.GradeBooks
 
             //protection code
             if (gradebook == null)
+            {
                 gradebook = (from assembly in AppDomain.CurrentDomain.GetAssemblies()
                              from type in assembly.GetTypes()
                              where type.FullName == "GradeBook.GradeBooks.StandardGradeBook"
                              select type).FirstOrDefault();
-            
+            }
+
             return JsonConvert.DeserializeObject(json, gradebook);
         }
     }
